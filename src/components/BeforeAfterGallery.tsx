@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { SlidersHorizontal, ArrowRight, HelpCircle, RefreshCw } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { SlidersHorizontal, ArrowRight, HelpCircle, RefreshCw, Eye } from 'lucide-react';
 import { CLINIC_IMAGES } from '../data/clinicData';
 
 interface BeforeAfterGalleryProps {
@@ -8,7 +8,10 @@ interface BeforeAfterGalleryProps {
 
 export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBooking }) => {
   const [sliderPosition, setSliderPosition] = useState(50);
+  const [isDragging, setIsDragging] = useState(false);
   const [activeCase, setActiveCase] = useState<'veneers' | 'invisalign' | 'whitening'>('veneers');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
 
   // Interactive Smile Quiz State
   const [quizStep, setQuizStep] = useState<number>(1);
@@ -19,6 +22,84 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
   }>({});
   const [quizResult, setQuizResult] = useState<string | null>(null);
 
+  // Move handler calculating percentage from clientX
+  const handleMove = useCallback((clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPosition(Math.round(percent * 10) / 10);
+  }, []);
+
+  // Mouse & Touch down handlers on the slider container
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    handleMove(e.clientX);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length > 0) {
+      isDraggingRef.current = true;
+      setIsDragging(true);
+      handleMove(e.touches[0].clientX);
+    }
+  };
+
+  // Global window listeners for drag & release
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (isDraggingRef.current) {
+        e.preventDefault();
+        handleMove(e.clientX);
+      }
+    };
+
+    const onMouseUp = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        setIsDragging(false);
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (isDraggingRef.current && e.touches.length > 0) {
+        handleMove(e.touches[0].clientX);
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        setIsDragging(false);
+      }
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [handleMove]);
+
+  // Keyboard accessibility (ArrowLeft and ArrowRight)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setSliderPosition((prev) => Math.max(0, prev - 5));
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      setSliderPosition((prev) => Math.min(100, prev + 5));
+    }
+  };
+
   const handleQuizAnswer = (key: 'concern' | 'timeline' | 'sensitivities', value: string) => {
     const updated = { ...quizAnswers, [key]: value };
     setQuizAnswers(updated);
@@ -26,7 +107,6 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
     if (quizStep < 3) {
       setQuizStep(quizStep + 1);
     } else {
-      // Determine recommendation
       if (updated.concern?.includes('Crooked') || updated.timeline?.includes('Discreet')) {
         setQuizResult('invisalign');
       } else if (updated.concern?.includes('Color') && !updated.concern?.includes('Chipped')) {
@@ -56,7 +136,7 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
       title: 'Discreet Invisalign® Clear Orthodontic Realignment',
       subtitle: 'Correction of anterior crowding and deep bite overlap without metal wires',
       timeline: 'Completed in 9 months with SmartTrack® aligners',
-      image: CLINIC_IMAGES.invisalign,
+      image: CLINIC_IMAGES.cosmeticSmile,
       preDesc: 'Pre-Treatment: Moderate anterior lower crowding and flared lateral incisors causing uneven bite friction.',
       postDesc: 'Post-Restoration: Perfectly harmonized dental arch, balanced bite occlusion, and effortless flossing access.',
     },
@@ -76,15 +156,15 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
     <section id="transformations" className="py-16 sm:py-24 bg-[#F4EFEA]/80 border-y border-stone-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
+        <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="text-xs tracking-wider uppercase font-semibold text-[#8B6D36] mb-2">
             Clinical Artistry &amp; Aesthetic Restraint
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl text-[#0E1B2E] font-semibold tracking-tight mb-4 text-balance">
-            Aesthetic Smile Transformations.
+            Interactive Smile Transformations.
           </h2>
           <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
-            Dr. Dallas avoids the chalky, artificial appearance of mass-produced dental work. Each restoration honors facial symmetry, natural enamel translucency, and healthy biology.
+            Drag the slider handle or click anywhere across the image to explore the difference between baseline pre-treatment and post-restoration results.
           </p>
         </div>
 
@@ -92,7 +172,10 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
         <div className="flex justify-center mb-8">
           <div className="inline-flex p-1 bg-white border border-stone-200 rounded-xl shadow-xs">
             <button
-              onClick={() => setActiveCase('veneers')}
+              onClick={() => {
+                setActiveCase('veneers');
+                setSliderPosition(50);
+              }}
               className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                 activeCase === 'veneers'
                   ? 'bg-[#0E1B2E] text-white shadow-xs'
@@ -102,7 +185,10 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
               Porcelain Veneers
             </button>
             <button
-              onClick={() => setActiveCase('invisalign')}
+              onClick={() => {
+                setActiveCase('invisalign');
+                setSliderPosition(50);
+              }}
               className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                 activeCase === 'invisalign'
                   ? 'bg-[#0E1B2E] text-white shadow-xs'
@@ -112,7 +198,10 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
               Invisalign® Alignment
             </button>
             <button
-              onClick={() => setActiveCase('whitening')}
+              onClick={() => {
+                setActiveCase('whitening');
+                setSliderPosition(50);
+              }}
               className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                 activeCase === 'whitening'
                   ? 'bg-[#0E1B2E] text-white shadow-xs'
@@ -126,70 +215,116 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
 
         {/* Interactive Comparison & Case Presentation */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-16">
-          {/* Interactive Visual Slider (7 cols) - Uses clipPath to eliminate distortion bug */}
+          {/* Interactive Visual Slider (7 cols) */}
           <div className="lg:col-span-7">
-            <div className="relative rounded-2xl overflow-hidden border border-stone-300 shadow-lg bg-stone-900 aspect-[16/10] select-none">
-              {/* After Image (Full background) */}
+            <div
+              ref={containerRef}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+              onKeyDown={handleKeyDown}
+              tabIndex={0}
+              role="slider"
+              aria-label="Before and after smile comparison slider. Use left and right arrow keys to adjust, or drag with mouse or touch."
+              aria-valuenow={Math.round(sliderPosition)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              className={`relative rounded-2xl overflow-hidden border border-stone-300 shadow-xl bg-stone-900 aspect-[16/10] select-none touch-none focus:outline-none focus:ring-2 focus:ring-[#0E1B2E] ${
+                isDragging ? 'cursor-grabbing' : 'cursor-ew-resize'
+              }`}
+            >
+              {/* Layer 1: AFTER Image (Full natural image) */}
               <img
                 src={currentCase.image}
                 alt="Post-treatment cosmetic smile outcome by Dr. Michele Dallas"
-                className="absolute inset-0 w-full h-full object-cover"
-                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+                loading="eager"
                 referrerPolicy="no-referrer"
               />
 
-              {/* Before Overlay Layer with exact same dimensions, clipped via inset */}
+              {/* Layer 2: BEFORE Image (Hardware-clipped via clipPath with warm pre-treatment tone) */}
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0 pointer-events-none select-none"
                 style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
               >
                 <img
                   src={currentCase.image}
                   alt="Pre-treatment baseline condition"
-                  className="w-full h-full object-cover filter contrast-90 brightness-90 saturate-50 sepia-[0.3]"
-                  loading="lazy"
+                  className="w-full h-full object-cover pointer-events-none select-none filter contrast-90 brightness-90 saturate-50 sepia-[0.35]"
+                  loading="eager"
                   referrerPolicy="no-referrer"
                 />
               </div>
 
-              {/* Clean Badges */}
-              <div className="absolute top-4 left-4 bg-stone-900/80 backdrop-blur-xs text-white text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md pointer-events-none">
+              {/* Badges */}
+              <div className="absolute top-4 left-4 bg-stone-900/85 backdrop-blur-xs text-white text-[11px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded-lg shadow-sm pointer-events-none">
                 Pre-Treatment Baseline
               </div>
 
-              <div className="absolute top-4 right-4 bg-[#0E1B2E]/85 backdrop-blur-xs text-amber-300 text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md pointer-events-none">
-                Post-Restoration Outcome
+              <div className="absolute top-4 right-4 bg-[#0E1B2E]/90 backdrop-blur-xs text-amber-300 text-[11px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded-lg shadow-sm pointer-events-none">
+                Post-Restoration Result
               </div>
 
               {/* Vertical Divider Hairline */}
               <div
-                className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg pointer-events-none"
+                className="absolute top-0 bottom-0 w-0.5 bg-white shadow-2xl pointer-events-none"
                 style={{ left: `${sliderPosition}%` }}
               />
 
-              {/* Slider Thumb Handle */}
+              {/* Slider Handle Hub */}
               <div
-                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white shadow-xl flex items-center justify-center pointer-events-none border border-stone-300 z-10"
+                className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-11 h-11 rounded-full bg-white shadow-2xl flex items-center justify-center pointer-events-none border-2 border-[#0E1B2E] z-10 transition-transform ${
+                  isDragging ? 'scale-115' : 'hover:scale-105'
+                }`}
                 style={{ left: `${sliderPosition}%` }}
               >
-                <SlidersHorizontal className="w-4 h-4 text-[#0E1B2E]" />
+                <SlidersHorizontal className="w-5 h-5 text-[#0E1B2E]" />
               </div>
+            </div>
 
-              {/* Range Input Control */}
+            {/* Quick-Jump Controls & Interactive Range Input */}
+            <div className="mt-3 flex items-center justify-between gap-3 text-xs text-stone-600 px-1">
+              <button
+                type="button"
+                onClick={() => setSliderPosition(0)}
+                className="px-3 py-1.5 rounded-lg bg-white hover:bg-stone-100 border border-stone-200 text-stone-700 font-medium transition-colors cursor-pointer"
+              >
+                Full Before (0%)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSliderPosition(50)}
+                className="px-3.5 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#0E1B2E] font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              >
+                <Eye className="w-3.5 h-3.5 text-[#C29D59]" />
+                <span>Split View (50%)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSliderPosition(100)}
+                className="px-3 py-1.5 rounded-lg bg-white hover:bg-stone-100 border border-stone-200 text-stone-700 font-medium transition-colors cursor-pointer"
+              >
+                Full After (100%)
+              </button>
+            </div>
+
+            {/* Range Scrubber Bar */}
+            <div className="mt-3 px-1">
               <input
                 type="range"
                 min="0"
                 max="100"
-                value={sliderPosition}
+                step="1"
+                value={Math.round(sliderPosition)}
                 onChange={(e) => setSliderPosition(Number(e.target.value))}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20"
-                aria-label="Drag before and after smile transformation comparison"
+                className="w-full accent-[#0E1B2E] cursor-pointer"
+                aria-label="Fine slide adjustment"
               />
-            </div>
-
-            <div className="flex items-center justify-between text-xs text-stone-500 mt-2.5 px-1">
-              <span>← Drag slider left for post-restoration view</span>
-              <span>Drag right for baseline comparison →</span>
+              <div className="flex justify-between text-[11px] text-stone-400 mt-0.5">
+                <span>← Drag or click to inspect transformation</span>
+                <span>{Math.round(sliderPosition)}%</span>
+              </div>
             </div>
           </div>
 
