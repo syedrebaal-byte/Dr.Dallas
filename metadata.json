@@ -1,0 +1,6 @@
+{
+  "name": "Dr. Michele Dallas, DDS | Las Olas Dental Centre",
+  "description": "Boutique cosmetic, restorative, and family dentistry in Fort Lauderdale, FL by Dr. Michele A. Dallas, DDS. Former Florida Board of Dentistry member offering porcelain veneers, Invisalign, dental implants, and gentle personalized care.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
