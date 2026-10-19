@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowRight, CheckCircle2, Clock, Sparkles, X, ChevronRight, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle2, X, ChevronRight, Calendar } from 'lucide-react';
 import { SERVICES_DATA, ServiceItem } from '../data/clinicData';
 
 interface ServicesSectionProps {
@@ -9,6 +9,25 @@ interface ServicesSectionProps {
 export const ServicesSection: React.FC<ServicesSectionProps> = ({ onOpenBooking }) => {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+
+  // Lock body scroll and handle Escape key for modal
+  useEffect(() => {
+    if (selectedService) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setSelectedService(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [selectedService]);
 
   const categories = [
     { id: 'all', label: 'All Treatments' },
@@ -64,7 +83,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ onOpenBooking 
 
         {/* Bento / Asymmetric Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredServices.map((service, index) => {
+          {filteredServices.map((service) => {
             const hasMarqueeImage = !!service.image;
             return (
               <div
@@ -77,7 +96,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ onOpenBooking 
                     <img
                       src={service.image}
                       alt={service.title}
-                      className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500 ease-out"
+                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
                       loading="lazy"
                       referrerPolicy="no-referrer"
                     />
@@ -142,7 +161,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ onOpenBooking 
 
       {/* In-Depth Clinical Slide-Over Modal */}
       {selectedService && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs">
           <div
             className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden"
             role="dialog"

@@ -23,14 +23,27 @@ export const InteractiveBookingModal: React.FC<InteractiveBookingModalProps> = (
   const [phone, setPhone] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
 
+  // Reset state when opening modal
   useEffect(() => {
-    if (preselectedServiceId) {
-      setService(preselectedServiceId);
+    if (isOpen) {
+      setIsConfirmed(false);
+      setStep(1);
+      setFormError(null);
+      if (preselectedServiceId) {
+        setService(preselectedServiceId);
+      }
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
     }
-  }, [preselectedServiceId]);
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, preselectedServiceId]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -46,17 +59,26 @@ export const InteractiveBookingModal: React.FC<InteractiveBookingModalProps> = (
 
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+
     if (step === 1) {
       setStep(2);
     } else if (step === 2) {
       setStep(3);
     } else if (step === 3) {
-      if (!name || !phone) return;
+      if (!name.trim()) {
+        setFormError('Please enter your full name.');
+        return;
+      }
+      if (!phone.trim()) {
+        setFormError('Please enter your primary phone number.');
+        return;
+      }
       setIsSubmitting(true);
       setTimeout(() => {
         setIsSubmitting(false);
         setIsConfirmed(true);
-      }, 700);
+      }, 600);
     }
   };
 
@@ -66,10 +88,12 @@ export const InteractiveBookingModal: React.FC<InteractiveBookingModalProps> = (
     onClose();
   };
 
-  const selectedServiceObj = SERVICES_DATA.find((s) => s.id === service) || SERVICES_DATA[0];
+  const selectedServiceTitle = service === 'consultation'
+    ? 'General Aesthetic Smile Consultation'
+    : (SERVICES_DATA.find((s) => s.id === service)?.title || 'Comprehensive Examination');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs">
       <div
         className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden"
         role="dialog"
@@ -127,7 +151,7 @@ export const InteractiveBookingModal: React.FC<InteractiveBookingModalProps> = (
                   Thank You, {name}.
                 </h4>
                 <p className="text-stone-600 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
-                  Your appointment inquiry for <strong className="text-stone-900">{selectedServiceObj.title}</strong> has been transmitted directly to Dr. Dallas&apos; Las Olas clinical coordinator.
+                  Your appointment inquiry for <strong className="text-stone-900">{selectedServiceTitle}</strong> has been transmitted directly to Dr. Dallas&apos; Las Olas clinical coordinator.
                 </p>
               </div>
 
@@ -147,7 +171,7 @@ export const InteractiveBookingModal: React.FC<InteractiveBookingModalProps> = (
               </div>
 
               <p className="text-[11px] text-stone-500">
-                Our front desk will contact you via phone or SMS during normal office hours to verify insurance coverage and lock in your exact chair time.
+                Our front desk will contact you via phone or SMS during normal office hours to verify insurance coverage and confirm your chair time.
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -167,6 +191,13 @@ export const InteractiveBookingModal: React.FC<InteractiveBookingModalProps> = (
             </div>
           ) : (
             <form onSubmit={handleNextStep} className="space-y-5">
+              {/* Error Message */}
+              {formError && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+                  {formError}
+                </div>
+              )}
+
               {/* STEP 1: Treatment & Patient Status */}
               {step === 1 && (
                 <div className="space-y-4">
@@ -240,7 +271,12 @@ export const InteractiveBookingModal: React.FC<InteractiveBookingModalProps> = (
                         <button
                           key={day}
                           type="button"
-                          onClick={() => setPreferredDay(day)}
+                          onClick={() => {
+                            setPreferredDay(day);
+                            if (day === 'Wednesday' && preferredTime.includes('Afternoon')) {
+                              setPreferredTime('Morning (9am - 12pm)');
+                            }
+                          }}
                           className={`p-2.5 rounded-lg border text-xs font-medium text-center transition-colors cursor-pointer ${
                             preferredDay === day
                               ? 'bg-[#0E1B2E] text-white border-[#0E1B2E]'
@@ -251,6 +287,11 @@ export const InteractiveBookingModal: React.FC<InteractiveBookingModalProps> = (
                         </button>
                       ))}
                     </div>
+                    {preferredDay === 'Wednesday' && (
+                      <p className="mt-2 text-[11px] text-amber-900 bg-amber-50/90 p-2 rounded-lg border border-amber-200/80">
+                        Notice: Wednesday office hours are 9:00 AM – 1:00 PM. Morning appointments are recommended.
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -313,9 +354,11 @@ export const InteractiveBookingModal: React.FC<InteractiveBookingModalProps> = (
                     </label>
                     <input
                       type="text"
-                      required
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        if (formError) setFormError(null);
+                      }}
                       placeholder="Jane Doe"
                       className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#0E1B2E] bg-stone-50/50"
                     />
@@ -328,9 +371,11 @@ export const InteractiveBookingModal: React.FC<InteractiveBookingModalProps> = (
                       </label>
                       <input
                         type="tel"
-                        required
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => {
+                          setPhone(e.target.value);
+                          if (formError) setFormError(null);
+                        }}
                         placeholder="(954) 555-0199"
                         className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#0E1B2E] bg-stone-50/50"
                       />
@@ -370,7 +415,10 @@ export const InteractiveBookingModal: React.FC<InteractiveBookingModalProps> = (
                 {step > 1 ? (
                   <button
                     type="button"
-                    onClick={() => setStep(step - 1)}
+                    onClick={() => {
+                      setFormError(null);
+                      setStep(step - 1);
+                    }}
                     className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-stone-700 hover:text-stone-900 cursor-pointer"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />

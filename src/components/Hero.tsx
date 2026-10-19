@@ -92,7 +92,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking, onExploreServices }) 
               <img
                 src={CLINIC_IMAGES.heroSuite}
                 alt="Las Olas Dental Centre luxurious clinical operatory suite overlooking tropical palms in Fort Lauderdale"
-                className="w-full h-full object-cover object-center transform group-hover:scale-102 transition-transform duration-700 ease-out"
+                className="w-full h-full object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-700 ease-out"
                 loading="eager"
                 referrerPolicy="no-referrer"
               />

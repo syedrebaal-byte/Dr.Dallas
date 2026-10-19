@@ -5,7 +5,7 @@
  */
 
 import heroSuiteImg from '../assets/images/hero_las_olas_dental_1792417360421.jpg';
-import drDallasPortraitImg from '../assets/images/dr_michele_dallas_portrait_1792417360962.jpg';
+import drDallasPortraitImg from '../assets/images/dr_michele_dallas_portrait_1792417990356.jpg';
 import cosmeticSmileImg from '../assets/images/cosmetic_smile_makeover_1792417361643.jpg';
 import implantTechImg from '../assets/images/implant_precision_technology_1792417362483.jpg';
 import invisalignImg from '../assets/images/invisalign_clear_aligners_1792417362412.jpg';

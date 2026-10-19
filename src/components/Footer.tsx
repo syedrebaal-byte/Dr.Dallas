@@ -10,6 +10,22 @@ interface FooterProps {
 export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenBooking }) => {
   const [legalModal, setLegalModal] = useState<'privacy' | 'accessibility' | null>(null);
 
+  React.useEffect(() => {
+    if (legalModal) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setLegalModal(null);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [legalModal]);
+
   return (
     <footer className="bg-[#0E1B2E] text-stone-300 pt-16 pb-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-8">

@@ -15,7 +15,7 @@ export const ContactSection: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formState.name || !formState.phone) return;
+    if (!formState.name.trim() || !formState.phone.trim()) return;
 
     setIsSubmitting(true);
     setTimeout(() => {

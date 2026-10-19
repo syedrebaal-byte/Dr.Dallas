@@ -19,3 +19,50 @@
 .font-sans {
   font-family: var(--font-sans);
 }
+
+/* Hide scrollbars across browsers while preserving scrolling functionality */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom styled range input slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #E7E5E4;
+  height: 6px;
+  border-radius: 9999px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0E1B2E;
+  cursor: pointer;
+  border: 2px solid #FAF8F5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  background: #1A2E4C;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0E1B2E;
+  cursor: pointer;
+  border: 2px solid #FAF8F5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}

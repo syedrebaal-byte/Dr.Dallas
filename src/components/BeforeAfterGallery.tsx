@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, SlidersHorizontal, CheckCircle2, ArrowRight, HelpCircle, RefreshCw } from 'lucide-react';
+import { SlidersHorizontal, ArrowRight, HelpCircle, RefreshCw } from 'lucide-react';
 import { CLINIC_IMAGES } from '../data/clinicData';
 
 interface BeforeAfterGalleryProps {
@@ -48,6 +48,7 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
       title: 'Porcelain Laminate Veneers & Enamel Realignment',
       subtitle: 'Restoration of worn incisal edges, shade brightening & symmetry balance',
       timeline: 'Completed in 2 appointments over 14 days',
+      image: CLINIC_IMAGES.cosmeticSmile,
       preDesc: 'Pre-Treatment: Generalized enamel wear, uneven central incisor lengths, mild tetracycline discoloration.',
       postDesc: 'Post-Restoration: Multi-layered feldspathic ceramic veneers matching natural lip curvature and lifelike light reflectance.',
     },
@@ -55,6 +56,7 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
       title: 'Discreet Invisalign® Clear Orthodontic Realignment',
       subtitle: 'Correction of anterior crowding and deep bite overlap without metal wires',
       timeline: 'Completed in 9 months with SmartTrack® aligners',
+      image: CLINIC_IMAGES.invisalign,
       preDesc: 'Pre-Treatment: Moderate anterior lower crowding and flared lateral incisors causing uneven bite friction.',
       postDesc: 'Post-Restoration: Perfectly harmonized dental arch, balanced bite occlusion, and effortless flossing access.',
     },
@@ -62,6 +64,7 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
       title: 'Laser In-Office Power Whitening & Enamel Polish',
       subtitle: 'Gentle lifting of coffee, red wine, and organic chromatic stains',
       timeline: 'Completed in a single 60-minute visit',
+      image: CLINIC_IMAGES.cosmeticSmile,
       preDesc: 'Pre-Treatment: Shade A3.5 with noticeable chromatic staining along cervical enamel boundaries.',
       postDesc: 'Post-Restoration: Brightened 7 full shades to natural B1 with zero residual dentinal sensitivity.',
     },
@@ -123,44 +126,50 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
 
         {/* Interactive Comparison & Case Presentation */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-16">
-          {/* Interactive Visual Slider (7 cols) */}
+          {/* Interactive Visual Slider (7 cols) - Uses clipPath to eliminate distortion bug */}
           <div className="lg:col-span-7">
             <div className="relative rounded-2xl overflow-hidden border border-stone-300 shadow-lg bg-stone-900 aspect-[16/10] select-none">
               {/* After Image (Full background) */}
               <img
-                src={CLINIC_IMAGES.cosmeticSmile}
+                src={currentCase.image}
                 alt="Post-treatment cosmetic smile outcome by Dr. Michele Dallas"
                 className="absolute inset-0 w-full h-full object-cover"
                 loading="lazy"
                 referrerPolicy="no-referrer"
               />
 
-              {/* Before Overlay Image (Clipped by slider position with subtle clinical desaturation) */}
+              {/* Before Overlay Layer with exact same dimensions, clipped via inset */}
               <div
-                className="absolute inset-0 overflow-hidden border-r-2 border-white shadow-2xl"
-                style={{ width: `${sliderPosition}%` }}
+                className="absolute inset-0 pointer-events-none"
+                style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
               >
                 <img
-                  src={CLINIC_IMAGES.cosmeticSmile}
+                  src={currentCase.image}
                   alt="Pre-treatment baseline condition"
-                  className="absolute inset-0 w-full h-full object-cover filter contrast-90 brightness-90 saturate-50 sepia-25 max-w-none"
-                  style={{ width: '100%', minWidth: '100%' }}
+                  className="w-full h-full object-cover filter contrast-90 brightness-90 saturate-50 sepia-[0.3]"
                   loading="lazy"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute top-4 left-4 bg-stone-900/80 backdrop-blur-xs text-white text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md">
-                  Pre-Treatment Baseline
-                </div>
               </div>
 
-              {/* After Label */}
-              <div className="absolute top-4 right-4 bg-[#0E1B2E]/85 backdrop-blur-xs text-amber-300 text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md">
+              {/* Clean Badges */}
+              <div className="absolute top-4 left-4 bg-stone-900/80 backdrop-blur-xs text-white text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md pointer-events-none">
+                Pre-Treatment Baseline
+              </div>
+
+              <div className="absolute top-4 right-4 bg-[#0E1B2E]/85 backdrop-blur-xs text-amber-300 text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md pointer-events-none">
                 Post-Restoration Outcome
               </div>
 
+              {/* Vertical Divider Hairline */}
+              <div
+                className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg pointer-events-none"
+                style={{ left: `${sliderPosition}%` }}
+              />
+
               {/* Slider Thumb Handle */}
               <div
-                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white shadow-xl flex items-center justify-center pointer-events-none border border-stone-300"
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white shadow-xl flex items-center justify-center pointer-events-none border border-stone-300 z-10"
                 style={{ left: `${sliderPosition}%` }}
               >
                 <SlidersHorizontal className="w-4 h-4 text-[#0E1B2E]" />
@@ -173,13 +182,13 @@ export const BeforeAfterGallery: React.FC<BeforeAfterGalleryProps> = ({ onOpenBo
                 max="100"
                 value={sliderPosition}
                 onChange={(e) => setSliderPosition(Number(e.target.value))}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-10"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20"
                 aria-label="Drag before and after smile transformation comparison"
               />
             </div>
 
-            <div className="flex items-center justify-between text-xs text-stone-500 mt-2 px-1">
-              <span>← Drag slider left for full post-restoration view</span>
+            <div className="flex items-center justify-between text-xs text-stone-500 mt-2.5 px-1">
+              <span>← Drag slider left for post-restoration view</span>
               <span>Drag right for baseline comparison →</span>
             </div>
           </div>

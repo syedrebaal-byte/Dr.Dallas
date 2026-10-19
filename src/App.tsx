@@ -31,32 +31,26 @@ export default function App() {
     }
   };
 
-  // IntersectionObserver to sync active nav section on scroll
+  // Consolidated IntersectionObserver to sync active nav section on scroll
   useEffect(() => {
     const sectionIds = ['hero', 'about', 'services', 'transformations', 'experience', 'contact'];
-    const observers: IntersectionObserver[] = [];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
 
     sectionIds.forEach((id) => {
       const element = document.getElementById(id);
-      if (element) {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                setActiveSection(id);
-              }
-            });
-          },
-          { threshold: 0.25 }
-        );
-        observer.observe(element);
-        observers.push(observer);
-      }
+      if (element) observer.observe(element);
     });
 
-    return () => {
-      observers.forEach((obs) => obs.disconnect());
-    };
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -122,23 +116,25 @@ export default function App() {
       />
 
       {/* Mobile Sticky Action Bar (Compliant with 15% mobile viewport cap) */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 p-2.5 bg-white/95 backdrop-blur-md border-t border-stone-200 shadow-lg flex items-center gap-2">
-        <a
-          href={CLINIC_INFO.phoneHref}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-[#0E1B2E] bg-stone-100 rounded-lg"
-        >
-          <Phone className="w-3.5 h-3.5 text-[#C29D59]" />
-          <span>Call Office</span>
-        </a>
+      {!isBookingOpen && (
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 p-2.5 bg-white/95 backdrop-blur-md border-t border-stone-200 shadow-lg flex items-center gap-2">
+          <a
+            href={CLINIC_INFO.phoneHref}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-[#0E1B2E] bg-stone-100 rounded-lg"
+          >
+            <Phone className="w-3.5 h-3.5 text-[#C29D59]" />
+            <span>Call Office</span>
+          </a>
 
-        <button
-          onClick={() => handleOpenBooking()}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-white bg-[#0E1B2E] rounded-lg shadow-sm"
-        >
-          <Calendar className="w-3.5 h-3.5 text-amber-300" />
-          <span>Book Visit</span>
-        </button>
-      </div>
+          <button
+            onClick={() => handleOpenBooking()}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-white bg-[#0E1B2E] rounded-lg shadow-sm cursor-pointer"
+          >
+            <Calendar className="w-3.5 h-3.5 text-amber-300" />
+            <span>Book Visit</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
